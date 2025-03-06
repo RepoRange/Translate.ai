@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Translation App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #162447 100%);
+        color: #e2e8f0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .box {
+        background: rgba(26, 26, 46, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+      }
+      .box:hover {
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      }
+      .input-area {
+        background: rgba(26, 26, 46, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s ease;
+        color: #e2e8f0;
+      }
+      .input-area:focus {
+        border-color: rgba(148, 163, 184, 0.4);
+        box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.1);
+        outline: none;
+      }
+      .translation-content {
+        flex-grow: 1;
+        overflow-y: auto;
+        background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .gradient-text {
+        background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+        border: none;
+        transition: all 0.3s ease;
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+      }
+      .btn-primary:active {
+        transform: translateY(1px);
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.2s ease;
+      }
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      .pdf-upload-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+      }
+      .pdf-upload-container {
+        width: 450px;
+        padding: 2rem;
+        border-radius: 1rem;
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      }
+      .drag-area {
+        border: 2px dashed rgba(148, 163, 184, 0.4);
+        border-radius: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .drag-area:hover {
+        border-color: rgba(148, 163, 184, 0.6);
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .success-notification {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        padding: 1rem;
+        background: rgba(16, 185, 129, 0.9);
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        transform: translateY(150%);
+        transition: transform 0.3s ease;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+      }
+      .success-notification.show {
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body class="font-sans antialiased">
+    <nav
+      class="backdrop-blur-xl bg-slate-900/30 border-b border-slate-800 sticky top-0 z-50"
+    >
+      <div class="container mx-auto px-6">
+        <div class="flex justify-between items-center h-16">
+          <a
+            class="text-xl font-semibold gradient-text tracking-tight flex items-center gap-2"
+            href="#"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="text-indigo-400"
+            >
+              <path d="m5 15 7-7 7 7"></path>
+              <path d="M12 4v16"></path>
+            </svg>
+            Translate.ai
+          </a>
+          <div class="hidden md:block">
+            <div class="flex space-x-8">
+              <a
+                class="text-slate-200 hover:text-slate-100 transition-colors text-sm font-medium border-b-2 border-indigo-500 pb-1"
+                href="#"
+                >Translation</a
+              >
+              <a
+                class="text-slate-400 hover:text-slate-200 transition-colors text-sm font-medium"
+                href="#"
+                >Documents</a
+              >
+              <a
+                class="text-slate-400 hover:text-slate-200 transition-colors text-sm font-medium"
+                href="#"
+                >API</a
+              >
+              <a
+                class="text-slate-400 hover:text-slate-200 transition-colors text-sm font-medium"
+                href="#"
+                >Enterprise</a
+              >
+            </div>
+          </div>
+          <div class="md:hidden">
+            <button class="text-slate-300 hover:text-white">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="4" x2="20" y1="12" y2="12"></line>
+                <line x1="4" x2="20" y1="6" y2="6"></line>
+                <line x1="4" x2="20" y1="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8 flex-grow">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
+        <!-- Source Text Box (Enlarged) -->
+        <div class="box rounded-2xl p-6 shadow-2xl">
+          <div class="flex justify-between items-center mb-3">
+            <label class="text-slate-300 text-sm font-medium"
+              >Source Text</label
+            >
+            <div class="flex items-center">
+              <button
+                id="pdfUploadBtn"
+                class="btn-secondary rounded-lg px-3 py-1.5 text-xs text-slate-300 flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="mr-1.5"
+                >
+                  <path
+                    d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                  ></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Upload PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Enlarged text area -->
+          <textarea
+            id="sourceText"
+            class="input-area custom-scrollbar w-full h-64 rounded-xl p-4 mb-6 resize-none text-slate-200 text-sm"
+            required
+            placeholder="Enter the text you want to translate..."
+          ></textarea>
+
+          <!-- Simplified control section with just target language and translate button side by side -->
+          <div class="flex space-x-4 items-end">
+            <div class="w-1/2">
+              <label class="block text-slate-400 text-xs mb-2"
+                >Target Language</label
+              >
+              <select class="input-area w-full p-3 rounded-lg text-sm">
+                <option value="kn">Kannada</option>
+                <option value="te">Telugu</option>
+                <option value="hi">Hindi</option>
+                <option value="ta">Tamil</option>
+              </select>
+            </div>
+
+            <button
+              id="translateBtn"
+              class="btn-primary w-1/2 py-3 rounded-xl text-sm font-medium text-white flex items-center justify-center space-x-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" x2="12" y1="2" y2="22"></line>
+                <path
+                  d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                ></path>
+              </svg>
+              <span>Translate Now</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Translation Output Box -->
+        <div class="box rounded-2xl p-6 shadow-2xl">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-sm font-medium text-slate-300">Translation</h4>
+            <div class="flex space-x-2">
+              <button
+                id="copyBtn"
+                class="btn-secondary rounded-lg px-3 py-1.5 text-xs text-slate-300 flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="mr-1.5"
+                >
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                  <path
+                    d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                  ></path>
+                </svg>
+                Copy
+              </button>
+              <button
+                id="downloadBtn"
+                class="btn-secondary rounded-lg px-3 py-1.5 text-xs text-slate-300 flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="mr-1.5"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" x2="12" y1="15" y2="3"></line>
+                </svg>
+                Download
+              </button>
+            </div>
+          </div>
+
+          <!-- Enlarged translation content area -->
+          <div
+            id="translatedText"
+            class="translation-content custom-scrollbar rounded-xl p-4 h-80 shadow-lg text-slate-200 text-sm"
+          >
+            <p class="text-slate-400">Your translation will appear here...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF Upload Overlay -->
+    <div id="pdfUploadOverlay" class="pdf-upload-overlay">
+      <div class="pdf-upload-container">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-slate-200">
+            Upload PDF Document
+          </h3>
+          <button
+            id="closeOverlayBtn"
+            class="text-slate-400 hover:text-slate-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div id="dropArea" class="drag-area mb-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="text-slate-400 mb-4"
+          >
+            <path
+              d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+            ></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <path d="M12 18v-6"></path>
+            <path d="m9 15 3 3 3-3"></path>
+          </svg>
+          <p class="text-slate-300 text-sm mb-1">Drag & Drop your PDF here</p>
+          <p class="text-slate-400 text-xs">or</p>
+          <label
+            for="fileInput"
+            class="btn-primary px-6 py-2 rounded-lg mt-4 text-xs font-medium text-white inline-block cursor-pointer"
+          >
+            Browse Files
+          </label>
+          <input type="file" id="fileInput" accept=".pdf" class="hidden" />
+        </div>
+
+        <div class="flex justify-center">
+          <button
+            id="uploadFileBtn"
+            class="btn-primary w-full py-3 rounded-lg text-sm font-medium text-white flex justify-center items-center"
+          >
+            Upload and Extract Text
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div id="successNotification" class="success-notification">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="text-white mr-2"
+      >
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span class="text-white text-sm">Text copied to clipboard!</span>
+    </div>
+
+    <footer class="bg-slate-900/50 border-t border-slate-800 py-4 mt-8">
+      <div class="container mx-auto px-6">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="text-slate-400 text-xs mb-4 md:mb-0">
+            © 2025 Translate.ai — Powered by AI
+          </div>
+          <div class="flex space-x-6">
+            <a href="#" class="text-slate-400 hover:text-slate-300 text-xs"
+              >Privacy</a
+            >
+            <a href="#" class="text-slate-400 hover:text-slate-300 text-xs"
+              >Terms</a
+            >
+            <a href="#" class="text-slate-400 hover:text-slate-300 text-xs"
+              >Help</a
+            >
+            <a href="#" class="text-slate-400 hover:text-slate-300 text-xs"
+              >About</a
+            >
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+  <script>
+    // PDF Upload Overlay functionality
+    const pdfUploadBtn = document.getElementById("pdfUploadBtn");
+    const pdfUploadOverlay = document.getElementById("pdfUploadOverlay");
+    const closeOverlayBtn = document.getElementById("closeOverlayBtn");
+    const dropArea = document.getElementById("dropArea");
+    const fileInput = document.getElementById("fileInput");
+    const uploadFileBtn = document.getElementById("uploadFileBtn");
+    const sourceText = document.getElementById("sourceText");
+
+    // Open PDF overlay
+    pdfUploadBtn.addEventListener("click", () => {
+      pdfUploadOverlay.style.display = "flex";
+    });
+
+    // Close PDF overlay
+    closeOverlayBtn.addEventListener("click", () => {
+      pdfUploadOverlay.style.display = "none";
+    });
+
+    // Close overlay when clicking outside
+    pdfUploadOverlay.addEventListener("click", (e) => {
+      if (e.target === pdfUploadOverlay) {
+        pdfUploadOverlay.style.display = "none";
+      }
+    });
+
+    // Handle file input change
+    fileInput.addEventListener("change", (e) => {
+      // Here you would typically process the file
+      // For demo purposes, we'll just show a success message
+      if (fileInput.files.length > 0) {
+        const fileName = fileInput.files[0].name;
+        // In a real app, you would extract text from PDF here
+        sourceText.value = `Text extracted from ${fileName}. In a real application, the actual content of the PDF would be extracted and displayed here.`;
+        pdfUploadOverlay.style.display = "none";
+      }
+    });
+
+    // Handle drop area click
+    dropArea.addEventListener("click", () => {
+      fileInput.click();
+    });
+
+    // Handle file upload button
+    uploadFileBtn.addEventListener("click", () => {
+      if (fileInput.files.length > 0) {
+        // Simulate PDF processing
+        sourceText.value = `Text extracted from ${fileInput.files[0].name}. In a real application, the actual content of the PDF would be extracted and displayed here.`;
+        pdfUploadOverlay.style.display = "none";
+      } else {
+        alert("Please select a PDF file first.");
+      }
+    });
+
+    // Drag and drop functionality
+    ["dragover", "dragenter"].forEach((eventName) => {
+      dropArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropArea.style.borderColor = "rgba(148, 163, 184, 0.8)";
+        dropArea.style.background = "rgba(255, 255, 255, 0.05)";
+      });
+    });
+
+    ["dragleave", "dragend"].forEach((eventName) => {
+      dropArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropArea.style.borderColor = "rgba(148, 163, 184, 0.4)";
+        dropArea.style.background = "transparent";
+      });
+    });
+
+    dropArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropArea.style.borderColor = "rgba(148, 163, 184, 0.4)";
+      dropArea.style.background = "transparent";
+
+      if (e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (file.type === "application/pdf") {
+          fileInput.files = e.dataTransfer.files;
+          // In a real app, you would extract text from PDF here
+          sourceText.value = `Text extracted from ${file.name}. In a real application, the actual content of the PDF would be extracted and displayed here.`;
+          pdfUploadOverlay.style.display = "none";
+        } else {
+          alert("Please upload PDF files only");
+        }
+      }
+    });
+
+    // Copy functionality
+    const copyBtn = document.getElementById("copyBtn");
+    const translatedText = document.getElementById("translatedText");
+    const successNotification = document.getElementById("successNotification");
+
+    copyBtn.addEventListener("click", () => {
+      const text = translatedText.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        // Show success notification
+        successNotification.classList.add("show");
+        setTimeout(() => {
+          successNotification.classList.remove("show");
+        }, 3000);
+      });
+    });
+
+    // Download functionality
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    downloadBtn.addEventListener("click", () => {
+      const text = translatedText.textContent;
+      const blob = new Blob([text], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "translation.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Translate button functionality (for demo)
+    const translateBtn = document.getElementById("translateBtn");
+
+    translateBtn.addEventListener("click", async () => {
+      const sourceContent = sourceText.value;
+      const targetLang = document.querySelector("select").value;
+
+      if (sourceContent) {
+        try {
+          // Show loading state
+          translatedText.innerHTML =
+            '<p class="text-slate-400">Translating...</p>';
+          translateBtn.disabled = true;
+
+          const response = await fetch("/translate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              text: sourceContent,
+              language: targetLang,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            translatedText.innerHTML = `<p class="whitespace-pre-wrap">${data.translation}</p>`;
+          } else {
+            translatedText.innerHTML = `<p class="text-red-400">Error: ${data.error}</p>`;
+          }
+        } catch (error) {
+          translatedText.innerHTML =
+            '<p class="text-red-400">Translation failed. Please try again.</p>';
+        } finally {
+          translateBtn.disabled = false;
+        }
+      } else {
+        alert("Please enter some text to translate");
+      }
+    });
+  </script>
+</html>
