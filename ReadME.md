@@ -57,7 +57,8 @@ API_KEY=your_api_key_here
 2. Start the Flask server:
 
 ```bash
-flask run
+Python app.py
+
 ```
 
 The app will be available at `http://127.0.0.1:5000`
