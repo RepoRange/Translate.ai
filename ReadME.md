@@ -74,11 +74,31 @@ The app will be available at `http://127.0.0.1:5000`
 - requests==2.31.0
 - python-dotenv==1.0.0
 
+## Project Structure
+
+```
+Translate.ai/
+│
+├── assets/          # Static assets directory
+│   ├── images/      # Images for web pages
+│   └── css/         # CSS stylesheets
+│
+├── templates/       # HTML templates
+├── app.py          # Main application file
+├── .env            # Environment variables
+└── requirements.txt # Project dependencies
+```
+
+## Asset Guidelines
+
+- Supported image formats: PNG, JPG, SVG
+- Maximum image size: 5MB
+- Recommended image dimensions:
+  - Logos: 200x200px
+  - Banners: 1200x300px
+  - Icons: 32x32px
+
 ## API Endpoints
 
 - `GET /`: Home page
 - `POST /translate`: Translation endpoint
-
-
-
-
