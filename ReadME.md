@@ -53,7 +53,8 @@ pip install -r requirements.txt
 2. Add your translation API credentials:
 
 ```
-API_KEY=your_api_key_here
+GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+GEMINI_API_KEY=your_api_key_here
 ```
 
 ## Running the Application

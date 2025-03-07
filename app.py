@@ -45,8 +45,10 @@ def translate():
     
     if response.status_code == 200:
         result = response.json()
+        print(result)
         if "candidates" in result and len(result["candidates"]) > 0:
             translated_text = result["candidates"][0]["content"]["parts"][0]["text"]
+            print(translated_text)
             # Extract only the translated text
             try:
                 # Extract text between quotes after "Translation:"
