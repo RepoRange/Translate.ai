@@ -13,7 +13,12 @@ A web-based language translation application built with Flask.
 
 ```bash
 git clone https://github.com/RepoRange/Translate.ai
-cd language-translation
+
+```
+
+```
+cd Translate.ai
+
 ```
 
 2. Create a virtual environment:
